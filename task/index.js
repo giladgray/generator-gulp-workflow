@@ -1,93 +1,75 @@
 'use strict';
 var yeoman = require('yeoman-generator');
 var chalk = require('chalk');
-var yosay = require('yosay');
 
+/*
+ * A subgenerator to create a single gulp task. Expects the following options:
+ *  - `name`: (String) name of task and config block
+ *  - `language`: (js|coffee) task language, determines filename
+ *  - `steps`: (Array<Step>) steps in the task, see below for step definition.
+ *
+ * A `Step` is a single `.pipe()` statement and takes the following output form:
+ * ```
+ *   .pipe(plugin[.command]([options]))
+ *     [.on('error', notify.onError())]
+ * ```
+ *
+ * A single step can be configured using an object with some or all of the following properties,
+ * optional unless otherwise noted:
+ *  - `plugin`: (String) **required** name of plugin that provides the step
+ *  - `command`: (String) command to call on plugin
+ *  - `options`: (String) command options, must be a string for now
+ *  - `require`: (String) dependency name, if different from "gulp-#{plugin}", or false to omit
+ *  - `error`: (Boolean) whether step can error, will add `.on('error', notify.onError())`
+ */
 module.exports = yeoman.generators.Base.extend({
   initializing: function () {
-    this.pkg = require('../package.json');
-
-    this.writeTask = function(spec) {
-      if (!spec) { return; }
-      var filename = 'gulp/tasks/' + spec.name + '.' + spec.language;
-      console.log('Writing ' + filename);
-
-      var requires = this._.chain(spec.steps)
-        .map(function(step) {
-          if (step.plugin === 'gulp' || step.dep === false) { return false; }
-          return step.plugin + ' = require(\'' + (step.dep || 'gulp-' + step.plugin) + '\')';
-        })
-        .compact()
-        .unique()
-        .value();
-      var hasError = this._.any(spec.steps, 'error');
-      if (hasError) {
-        requires.push('notify = require(\'gulp-notify\')');
-      }
-      if (spec.language === 'js') {
-        requires = requires.map(function (req) { return 'var ' + req + ';'; });
-      }
-
-      var pipes = spec.steps.map(function (step) {
-        var command = step.plugin + (step.command ? '.' + step.command : '');
-        var options = step.options || '';
-        var line = '.pipe(' + command + '(' + options + '))';
-        if (step.error) { line += '\n      .on(\'error\', notify.onError())'; }
-        return line;
-      });
-
-      this.fs.copyTpl(
-        this.templatePath('_task.' + spec.language),
-        this.destinationPath(filename),
-        {
-          name: spec.name,
-          requires: requires,
-          pipes: pipes
-        }
-      );
-    };
   },
 
-  // prompting: function () {
-  //   var done = this.async();
-  //
-  //   // Have Yeoman greet the user.
-  //   this.log(yosay(
-  //     'Welcome to the cat\'s meow ' + chalk.red('GulpWorkflow') + ' generator!'
-  //   ));
-  //
-  //   var prompts = [{
-  //     type: 'list',
-  //     name: 'scripts',
-  //     message: 'What language would you like to use for scripts?',
-  //     choices: tasks.scripts,
-  //   }, {
-  //     type: 'list',
-  //     name: 'styles',
-  //     message: 'What language would you like to use for stylesheets?',
-  //     choices: tasks.styles,
-  //   }, {
-  //     type: 'list',
-  //     name: 'templates',
-  //     message: 'What language would you like to use for templates?',
-  //     choices: tasks.templates,
-  //   }, {
-  //     type: 'checkbox',
-  //     name: 'others',
-  //     message: 'What other tasks would you like?',
-  //     choices: tasks.others
-  //   }];
-  //
-  //   this.prompt(prompts, function (props) {
-  //     this._.extend(this, props);
-  //     done();
-  //   }.bind(this));
-  // },
+  writing: function () {
+    var name = this.options.name;
+    var language = this.options.language;
+    var steps = this.options.steps;
 
-  writing: {
-    task: function () {
-      console.log(this.options);
-      this.writeTask(this.options);
+    var filename = 'gulp/tasks/' + name + '.' + language;
+
+    // construct array of require() statements
+    var requires = this._.chain(steps)
+      .map(function(step) {
+        if (step.plugin === 'gulp' || step.require === false) { return false; }
+        return step.plugin + ' = require(\'' + (step.require || 'gulp-' + step.plugin) + '\')';
+      })
+      .compact()
+      .unique()
+      .value();
+    // add dependency on gulp-notify if needed
+    var hasError = this._.any(steps, 'error');
+    if (hasError) {
+      requires.push('notify = require(\'gulp-notify\')');
     }
+    // convert to javascript if necessary
+    if (language === 'js') {
+      requires = requires.map(function (req) { return 'var ' + req + ';'; });
+    }
+
+    // construct array of .pipe() statements
+    var pipes = steps.map(function (step) {
+      var command = step.plugin + (step.command ? '.' + step.command : '');
+      var options = step.options || '';
+      var line = '.pipe(' + command + '(' + options + '))';
+      // add error handling if necessary
+      if (step.error) { line += '\n      .on(\'error\', notify.onError())'; }
+      return line;
+    });
+
+    this.fs.copyTpl(
+      this.templatePath('_task.' + language),
+      this.destinationPath(filename),
+      {
+        name: name,
+        requires: requires,
+        pipes: pipes
+      }
+    );
   }
 });

@@ -22,18 +22,18 @@ describe('gulp-workflow:task', function () {
       name: 'sass',
       language: 'js',
       steps: [
-        {plugin: 'sourcemaps', command: 'init'},
-        {plugin: 'sass', options: 'config.options', error: true},
-        {plugin: 'sourcemaps', command: 'write'},
-        {plugin: 'autoprefixer', options: '{ browsers: [\'last 2 version\'] }'},
-        {plugin: 'gulp', command: 'dest', options: 'config.dest'},
-        {plugin: 'browserSync', command: 'reload', options: '{ stream: true }', dep: 'browser-sync'}
+        { plugin: 'sourcemaps', command: 'init' },
+        { plugin: 'sass', options: 'config.options', error: true },
+        { plugin: 'sourcemaps', command: 'write' },
+        { plugin: 'autoprefixer', options: '{ browsers: [\'last 2 version\'] }' },
+        { plugin: 'gulp', command: 'dest', options: 'config.dest' },
+        { plugin: 'browserSync', command: 'reload', options: '{ stream: true }', require: 'browser-sync' }
       ]
     };
     defineTask(prompts, done);
   });
 
-  it('creates files', function () {
+  it('writes js task file as expected', function () {
     assert.equal(
       fs.readFileSync(path.join(TEST_DIR, 'gulp/tasks/sass.js'), 'utf-8'),
       fs.readFileSync(path.join(__dirname, 'fixtures/sass.js'), 'utf-8')
