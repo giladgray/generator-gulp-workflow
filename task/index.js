@@ -29,6 +29,7 @@ module.exports = yeoman.generators.Base.extend({
   writing: function () {
     var name = this.options.name;
     var language = this.options.language;
+    var isJS = (language === 'js');
     var steps = this.options.steps;
 
     var filename = 'gulp/tasks/' + name + '.' + language;
@@ -47,18 +48,16 @@ module.exports = yeoman.generators.Base.extend({
     if (hasError) {
       requires.push('notify = require(\'gulp-notify\')');
     }
-    // convert to javascript if necessary
-    if (language === 'js') {
-      requires = requires.map(function (req) { return 'var ' + req + ';'; });
-    }
 
     // construct array of .pipe() statements
     var pipes = steps.map(function (step) {
       var command = step.plugin + (step.command ? '.' + step.command : '');
       var options = step.options || '';
-      var line = '.pipe(' + command + '(' + options + '))';
+      var line = command + '(' + options + ')';
       // add error handling if necessary
-      if (step.error) { line += '\n      .on(\'error\', notify.onError())'; }
+      if (step.error) {
+        line += (isJS ? ')' : '') + '\n      .on' + (isJS ? '(' : ' ') + '\'error\', notify.onError()';
+      }
       return line;
     });
 

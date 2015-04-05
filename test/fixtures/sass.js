@@ -7,7 +7,7 @@ gulp.task('sass', function () {
   var autoprefixer = require('gulp-autoprefixer');
   var browserSync = require('browser-sync');
   var notify = require('gulp-notify');
-  
+
   var config = require('../config').sass;
 
   return gulp.src(config.src)

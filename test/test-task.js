@@ -17,26 +17,49 @@ function defineTask(options, done) {
 }
 
 describe('gulp-workflow:task', function () {
-  before(function (done) {
-    var prompts = {
-      name: 'sass',
-      language: 'js',
-      steps: [
-        { plugin: 'sourcemaps', command: 'init' },
-        { plugin: 'sass', options: 'config.options', error: true },
-        { plugin: 'sourcemaps', command: 'write' },
-        { plugin: 'autoprefixer', options: '{ browsers: [\'last 2 version\'] }' },
-        { plugin: 'gulp', command: 'dest', options: 'config.dest' },
-        { plugin: 'browserSync', command: 'reload', options: '{ stream: true }', require: 'browser-sync' }
-      ]
-    };
-    defineTask(prompts, done);
+  describe('javascript', function () {
+    before(function (done) {
+      var prompts = {
+        name: 'sass',
+        language: 'js',
+        steps: [
+          { plugin: 'sourcemaps', command: 'init' },
+          { plugin: 'sass', options: 'config.options', error: true },
+          { plugin: 'sourcemaps', command: 'write' },
+          { plugin: 'autoprefixer', options: '{ browsers: [\'last 2 version\'] }' },
+          { plugin: 'gulp', command: 'dest', options: 'config.dest' },
+          { plugin: 'browserSync', command: 'reload', options: '{ stream: true }', require: 'browser-sync' }
+        ]
+      };
+      defineTask(prompts, done);
+    });
+
+    it('writes js task file as expected', function () {
+      assert.equal(
+        fs.readFileSync(path.join(TEST_DIR, 'gulp/tasks/sass.js'), 'utf-8'),
+        fs.readFileSync(path.join(__dirname, 'fixtures/sass.js'), 'utf-8')
+      );
+    });
   });
 
-  it('writes js task file as expected', function () {
-    assert.equal(
-      fs.readFileSync(path.join(TEST_DIR, 'gulp/tasks/sass.js'), 'utf-8'),
-      fs.readFileSync(path.join(__dirname, 'fixtures/sass.js'), 'utf-8')
-    );
+
+  describe('coffeescript', function () {
+    before(function (done) {
+      var prompts = {
+        name: 'deploy',
+        language: 'coffee',
+        steps: [
+          { plugin: 'deploy', options: 'config.options', require: 'gulp-gh-pages' }
+        ]
+      };
+      defineTask(prompts, done);
+    });
+
+    it('writes coffee task file as expected', function () {
+      assert.equal(
+        fs.readFileSync(path.join(TEST_DIR, 'gulp/tasks/deploy.coffee'), 'utf-8'),
+        fs.readFileSync(path.join(__dirname, 'fixtures/deploy.coffee'), 'utf-8')
+      );
+    });
   });
 });

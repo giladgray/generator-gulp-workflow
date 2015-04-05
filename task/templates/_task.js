@@ -2,10 +2,10 @@
 var gulp = require('gulp');
 
 gulp.task('<%= name %>', function () {
-  <%= requires.join('\n  ') %>
-  
+  var <%= requires.join(';\n  var ') %>;
+
   var config = require('../config').<%= name %>;
 
   return gulp.src(config.src)
-    <%= pipes.join('\n    ') %>;
+    .pipe(<%= pipes.join(')\n    .pipe(') %>);
 });
