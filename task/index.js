@@ -24,10 +24,14 @@ var chalk = require('chalk');
  */
 module.exports = yeoman.generators.Base.extend({
   initializing: function () {
+    this.option('name', 'display name of task');
+    this.option('task', 'name of task and corresponding config block');
+    this.option('language', 'task language, one of: js,coffee');
+    this.option('steps', 'array of steps in the task');
   },
 
   writing: function () {
-    var name = this.options.name;
+    var name = this.options.task || this.options.name.toLowerCase();
     var language = this.options.language;
     var isJS = (language === 'js');
     var steps = this.options.steps;
