@@ -1,5 +1,11 @@
 {
   "name": "package",
   "version": "0.0.0",
-  "dependencies": {}
+  "devDependencies": {
+    "coffee-script": "^1.8.0",
+    "gulp": "^3.8.7",
+    <%= deps.join('\n    ') %>
+    "gulp-util": "^3.0.1",
+    "require-dir": "^0.1.0"
+  }
 }

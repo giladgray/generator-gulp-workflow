@@ -55,15 +55,31 @@ module.exports = yeoman.generators.Base.extend({
 
     this.prompt(prompts, function (props) {
       this._.extend(this, props);
+      this.allTasks = this._.compact([this.scripts, this.styles, this.templates].concat(this.others));
       done();
     }.bind(this));
   },
 
   writing: {
     app: function () {
-      this.fs.copy(
+      // sorted, unique list of plugins used in each step of all tasks.
+      // versions are all * for now, until we figure out a way to specify it.
+      var deps = this._.chain(this.allTasks)
+        .pluck('steps')
+        .flatten()
+        .filter(function(step) { return step.plugin !== 'gulp'; })
+        .map(function (step) { return step.require || 'gulp-' + step.plugin; })
+        .unique()
+        .map(function (req) { return '"' + req + '": "*",'; })
+        .value();
+      deps.sort();
+
+      this.fs.copyTpl(
         this.templatePath('_package.json'),
-        this.destinationPath('package.json')
+        this.destinationPath('package.json'),
+        {
+          deps: deps
+        }
       );
     },
 
@@ -79,30 +95,22 @@ module.exports = yeoman.generators.Base.extend({
     },
 
     tasks: function() {
-      var allTasks = this._.compact([this.scripts, this.styles, this.templates].concat(this.others));
-      this._.each(allTasks, function (task) {
+      this._.each(this.allTasks, function (task) {
         task.language = this.language;
-        this.composeWith('gulp-workflow:task', {options: task}, {local: require.resolve('../task/')});
+        this.composeWith('gulp-workflow:task', { options: task },
+          { local: require.resolve('../task/') });
       }.bind(this));
     },
 
-    others: function() {
-
+    config: function() {
+      this.fs.copyTpl(
+        this.templatePath('_config.coffee'),
+        this.destinationPath('gulp/config.coffee'),
+        {
+          tasks: this.allTasks
+        }
+      );
     }
-
-    // config: function() {
-    //   this.fs.copyTpl(
-    //     this.templatePath('_config.coffee'),
-    //     this.destinationPath('gulp/config.coffee'),
-    //     {
-    //       tasks: [
-    //         this.scripts,
-    //         this.styles,
-    //         this.templates
-    //       ].concat(this.others)
-    //     }
-    //   );
-    // }
   },
 
   install: function () {

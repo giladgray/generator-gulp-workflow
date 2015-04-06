@@ -27,7 +27,6 @@ describe('gulp-workflow:app', function () {
 
   it('creates project files', function () {
     assert.file([
-      'package.json',
       '.editorconfig',
       '.jshintrc'
     ]);
@@ -38,5 +37,16 @@ describe('gulp-workflow:app', function () {
       'gulp/tasks/coffee.js',
       'gulp/tasks/sass.js',
     ]);
+  });
+
+  it('creates config files', function () {
+    assert.fileContent('gulp/config.coffee', /coffee:/);
+    assert.fileContent('gulp/config.coffee', /sass:/);
+  });
+
+  it('populate package.json', function () {
+    assert.fileContent('package.json', /gulp-autoprefixer/);
+    assert.fileContent('package.json', /gulp-coffee/);
+    assert.fileContent('package.json', /gulp-sass/);
   });
 });
